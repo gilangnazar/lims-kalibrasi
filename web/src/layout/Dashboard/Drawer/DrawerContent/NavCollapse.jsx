@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, matchPath, useLocation, useNavigate } from 'react-router-dom';
 
@@ -157,13 +156,3 @@ export default function NavCollapse({ menu, level, parentId, setSelectedItems, s
     </ListGroup>
   );
 }
-
-NavCollapse.propTypes = {
-  menu: PropTypes.any,
-  level: PropTypes.number,
-  parentId: PropTypes.string,
-  setSelectedItems: PropTypes.oneOfType([PropTypes.func, PropTypes.any]),
-  selectedItems: PropTypes.any,
-  setSelectedLevel: PropTypes.func,
-  selectedLevel: PropTypes.number
-};

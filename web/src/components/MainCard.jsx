@@ -1,5 +1,3 @@
-import PropTypes from 'prop-types';
-
 // react-bootstrap
 import Card from 'react-bootstrap/Card';
 import Stack from 'react-bootstrap/Stack';
@@ -40,17 +38,3 @@ export default function MainCard({
     </Card>
   );
 }
-
-MainCard.propTypes = {
-  children: PropTypes.node,
-  subheader: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
-  footer: PropTypes.node,
-  secondary: PropTypes.node,
-  content: PropTypes.bool,
-  title: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
-  className: PropTypes.string,
-  headerClassName: PropTypes.string,
-  bodyClassName: PropTypes.string,
-  footerClassName: PropTypes.string,
-  ref: PropTypes.object
-};

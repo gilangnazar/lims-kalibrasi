@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -117,5 +116,3 @@ export default function AuthLoginForm({ className, link }) {
     </MainCard>
   );
 }
-
-AuthLoginForm.propTypes = { className: PropTypes.string, link: PropTypes.string };

@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import { useLocation, matchPath, Link } from 'react-router-dom';
 
 // project-imports
@@ -35,5 +34,3 @@ export default function NavItem({ item }) {
     </li>
   );
 }
-
-NavItem.propTypes = { item: PropTypes.any };

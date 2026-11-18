@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import { useState } from 'react';
 
 // react-bootstrap
@@ -73,9 +72,3 @@ export default function Navigation({ selectedItems, setSelectedItems, setSelectT
 
   return <ul className="pc-navbar">{navGroups}</ul>;
 }
-
-Navigation.propTypes = {
-  selectedItems: PropTypes.any,
-  setSelectedItems: PropTypes.oneOfType([PropTypes.func, PropTypes.any]),
-  setSelectTab: PropTypes.oneOfType([PropTypes.func, PropTypes.any])
-};

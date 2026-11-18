@@ -1,4 +1,3 @@
-import PropTypes from 'prop-types';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 
@@ -145,5 +144,3 @@ export default function AuthRegisterForm({ className, link }) {
     </MainCard>
   );
 }
-
-AuthRegisterForm.propTypes = { className: PropTypes.string, link: PropTypes.string };

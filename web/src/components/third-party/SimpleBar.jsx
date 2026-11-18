@@ -1,5 +1,3 @@
-import PropTypes from 'prop-types';
-
 // third-party
 import { BrowserView, MobileView } from 'react-device-detect';
 import SimpleBar from 'simplebar-react';
@@ -23,11 +21,3 @@ export default function SimpleBarScroll({ children, className, browserStyle, sty
     </>
   );
 }
-
-SimpleBarScroll.propTypes = {
-  children: PropTypes.node,
-  className: PropTypes.string,
-  browserStyle: PropTypes.any,
-  style: PropTypes.any,
-  other: PropTypes.any
-};
