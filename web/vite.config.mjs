@@ -84,5 +84,10 @@ export default defineConfig(({ mode }) => {
     },
     base: API_URL,
     plugins: [react(), jsconfigPaths()],
+    test: {
+      environment: "jsdom",
+      globals: true,
+      setupFiles: "./src/setupTests.js",
+    },
   };
 });
