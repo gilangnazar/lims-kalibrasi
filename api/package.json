@@ -1,37 +1,47 @@
 {
+  "name": "lims-kalibrasi-api",
+  "version": "1.0.0",
+  "description": "LIMS Kalibrasi API",
+  "main": "index.js",
+  "private": true,
+  "type": "commonjs",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "migrate": "knex migrate:latest",
+    "migrate:rollback": "knex migrate:rollback",
+    "migrate:make": "knex migrate:make",
+    "seed": "knex seed:run",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint ."
+  },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^18.0.10",
     "express": "^5.3.0",
     "express-rate-limit": "^8.7.4",
+    "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
-    "mysql2": "^3.24.6"
+    "knex": "^3.1.0",
+    "mysql2": "^3.24.6",
+    "zod": "^4.1.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
-  },
-  "name": "lims-kalibrasi-api",
-  "version": "1.0.0",
-  "description": "LIMS Kalibrasi API",
-  "main": "index.js",
-  "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+    "@eslint/js": "9.39.5",
+    "eslint": "9.39.5",
+    "eslint-config-prettier": "10.1.8",
+    "globals": "^16.4.0",
+    "supertest": "^7.1.4",
+    "vitest": "5.1.0"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/gilangnazar/lims-kalibrasi-api.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "commonjs",
-  "engines": {
-    "node": ">=22.0.0"
-  },
-  "bugs": {
-    "url": "https://github.com/gilangnazar/lims-kalibrasi-api/issues"
-  },
-  "homepage": "https://github.com/gilangnazar/lims-kalibrasi-api#readme"
+  "license": "ISC"
 }

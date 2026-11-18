@@ -5,6 +5,7 @@ import { matchPath, useLocation } from 'react-router-dom';
 import NavItem from './NavItem';
 import NavCollapse from './NavCollapse';
 import { useAuth } from 'hooks/useAuth';
+import { can } from 'config/permissions';
 
 // ==============================|| NAVIGATION - GROUP ||============================== //
 
@@ -24,18 +25,8 @@ export default function NavGroup(props) {
     }
   }, [item, lastItem, lastItemId, remItems]);
 
-  //  Helper: Check if user has access to menu item
-  const hasAccess = useCallback(
-    (menuItem) => {
-      // If no roles specified, everyone can access
-      if (!menuItem.roles || menuItem.roles.length === 0) {
-        return true;
-      }
-      // Check if user's role is in the allowed roles
-      return menuItem.roles.includes(user?.role);
-    },
-    [user?.role]
-  );
+  //  Helper: items without a `permission` are visible to everyone
+  const hasAccess = useCallback((menuItem) => !menuItem.permission || can(user, menuItem.permission), [user]);
 
   //  Helper: Recursively check if route matches
   const findMatchingChild = useCallback(
@@ -97,6 +88,9 @@ export default function NavGroup(props) {
         }
       });
   }, [currentItem, selectedItems, selectedLevel, setSelectedItems, setSelectedLevel, hasAccess]);
+
+  // Hide the whole group (heading included) when the user can't see any of its items.
+  if (!navCollapse?.length) return null;
 
   return (
     <Fragment>

@@ -1,3 +1,4 @@
+// `permission` keys live in config/permissions.js; items the user can't access are hidden.
 const masterData = {
   id: 'master-data',
   title: 'Master Data',
@@ -5,27 +6,27 @@ const masterData = {
   children: [
     {
       id: 'master-data-customers',
-      title: 'Master Pelanggan',
+      title: 'Pelanggan',
       type: 'item',
-      icon: 'ph ph-users',
+      icon: 'ph ph-buildings',
       url: '/customers',
-      roles: ['Admin'] // Match the route
+      permission: 'customers.read'
     },
     {
       id: 'master-data-standard-instruments',
-      title: 'Master Standard Instrument',
+      title: 'Standard Instrument',
       type: 'item',
-      icon: 'ph ph-list',
+      icon: 'ph ph-scales',
       url: '/standard-instruments',
-      roles: ['Admin'] // Match the route
+      permission: 'standard-instruments.read'
     },
     {
       id: 'master-data-methods',
-      title: 'Master Metode',
+      title: 'Metode Kalibrasi',
       type: 'item',
-      icon: 'ph ph-gear',
+      icon: 'ph ph-list-checks',
       url: '/methods',
-      roles: ['Admin'] // Match the route
+      permission: 'methods.read'
     }
   ]
 };

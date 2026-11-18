@@ -1,15 +1,15 @@
 const administration = {
   id: 'administration',
-  title: 'Administration',
+  title: 'Administrasi',
   type: 'group',
   children: [
     {
       id: 'users',
-      title: 'Users',
+      title: 'Pengguna',
       type: 'item',
-      icon: '',
+      icon: 'ph ph-user-gear',
       url: '/users',
-      roles: ['Admin']
+      permission: 'users.read'
     }
   ]
 };

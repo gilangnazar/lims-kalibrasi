@@ -1,86 +1,51 @@
-import { createContext, useState, useEffect } from 'react';
+import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
+import { mutate } from 'swr';
 
-export const AuthContext = createContext();
+import { api, setUnauthorizedHandler, tokenStore } from 'lib/api';
+
+export const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
-  // Check if token exists on mount
-  useEffect(() => {
-    const storedToken = localStorage.getItem('token');
-    if (storedToken) {
-      setToken(storedToken);
-      const storedUser = localStorage.getItem('user');
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-        setIsAuthenticated(true);
-      }
-    }
-    setLoading(false);
+  const logout = useCallback(() => {
+    tokenStore.clear();
+    setUser(null);
+    // Drop cached data so the next user never sees the previous user's lists.
+    mutate(() => true, undefined, { revalidate: false });
   }, []);
 
-  // Login function
-  const login = async (username, password) => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch('http://localhost:5000/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
-      }
-
-      setToken(data.data.token);
-      setUser(data.data.user);
-      setIsAuthenticated(true);
-
-      // Store in localStorage
-      localStorage.setItem('token', data.data.token);
-      localStorage.setItem('user', JSON.stringify(data.data.user));
-
-      return data;
-    } catch (err) {
-      setError(err.message);
-      setIsAuthenticated(false);
-      throw err;
-    } finally {
+  // On load, trust the server (not localStorage) for who is logged in.
+  useEffect(() => {
+    setUnauthorizedHandler(logout);
+    if (!tokenStore.get()) {
       setLoading(false);
+      return;
     }
-  };
+    api
+      .get('/auth/me')
+      .then((res) => setUser(res.data))
+      .catch(() => logout())
+      .finally(() => setLoading(false));
+  }, [logout]);
 
-  // Logout function
-  const logout = () => {
-    setUser(null);
-    setToken(null);
-    setIsAuthenticated(false);
-    setError(null);
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-  };
+  const login = useCallback(async (username, password) => {
+    const res = await api.post('/auth/login', { username, password });
+    tokenStore.set(res.data.token);
+    setUser(res.data.user);
+    return res.data.user;
+  }, []);
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        token,
-        loading,
-        error,
-        isAuthenticated,
-        login,
-        logout
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
+  const refreshUser = useCallback(async () => {
+    const res = await api.get('/auth/me');
+    setUser(res.data);
+  }, []);
+
+  const value = useMemo(
+    () => ({ user, loading, isAuthenticated: Boolean(user), login, logout, refreshUser }),
+    [user, loading, login, logout, refreshUser]
   );
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

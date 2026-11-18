@@ -1,21 +1,13 @@
-import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 
-export default function FormModal({ showModal, handleCloseModal, modalTitle, form, handleSubmit, submitButtonText = 'Simpan' }) {
+/** Modal shell for a form. The form itself renders <ModalForm> (body + footer). */
+export default function FormModal({ show, onHide, title, size, children }) {
   return (
-    <Modal show={showModal} onHide={handleCloseModal} centered>
+    <Modal show={show} onHide={onHide} centered backdrop="static" size={size}>
       <Modal.Header closeButton>
-        <Modal.Title>{modalTitle}</Modal.Title>
+        <Modal.Title>{title}</Modal.Title>
       </Modal.Header>
-      <Modal.Body>{form}</Modal.Body>
-      <Modal.Footer>
-        <Button variant="secondary" onClick={handleCloseModal}>
-          Batal
-        </Button>
-        <Button variant="primary" onClick={handleSubmit}>
-          {submitButtonText}
-        </Button>
-      </Modal.Footer>
+      {show && children}
     </Modal>
   );
 }

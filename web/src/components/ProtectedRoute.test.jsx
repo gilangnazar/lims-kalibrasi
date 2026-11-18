@@ -4,7 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import ProtectedRoute from 'components/ProtectedRoute';
 import { AuthContext } from 'context/AuthContext';
 
-function renderAt(auth, requiredRoles) {
+function renderAt(auth, requiredRoles, permission) {
   return render(
     <AuthContext.Provider value={{ loading: false, ...auth }}>
       <MemoryRouter initialEntries={['/users']}>
@@ -14,7 +14,7 @@ function renderAt(auth, requiredRoles) {
           <Route
             path="/users"
             element={
-              <ProtectedRoute requiredRoles={requiredRoles}>
+              <ProtectedRoute requiredRoles={requiredRoles} permission={permission}>
                 <div>users page</div>
               </ProtectedRoute>
             }
@@ -38,6 +38,14 @@ describe('ProtectedRoute', () => {
 
   it('renders the page for a user with the required role', () => {
     renderAt({ isAuthenticated: true, user: { role: 'Admin' } }, ['Admin']);
+    expect(screen.getByText('users page')).toBeInTheDocument();
+  });
+
+  it('uses the permission map when a permission is given', () => {
+    renderAt({ isAuthenticated: true, user: { role: 'Finance' } }, [], 'users.read');
+    expect(screen.getByText('home page')).toBeInTheDocument();
+
+    renderAt({ isAuthenticated: true, user: { role: 'Admin' } }, [], 'users.read');
     expect(screen.getByText('users page')).toBeInTheDocument();
   });
 });

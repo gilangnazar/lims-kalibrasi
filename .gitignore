@@ -1,0 +1,42 @@
+# Single .gitignore for the whole repo (api/ and web/ have no own .gitignore).
+
+# --- AI assistant files (kept local, not shared) ---
+CLAUDE.md
+CLAUDE.local.md
+AGENTS.md
+MEMORY.md
+.claude/
+graphify-out/
+docs/
+
+# --- Dependencies (root, api/, web/) ---
+node_modules/
+
+# --- Environment / secrets (examples stay tracked) ---
+.env
+.env.*
+!.env.example
+!.env.test.example
+
+# --- Build & test output ---
+dist/
+build/
+coverage/
+*.lcov
+.eslintcache
+*.tsbuildinfo
+.cache/
+.vite/
+
+# --- Logs ---
+logs/
+*.log
+npm-debug.log*
+
+# --- Editor / OS ---
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini

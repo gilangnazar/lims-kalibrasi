@@ -1,10 +1,20 @@
 import { defineConfig, loadEnv } from "vite";
 import react from "@vitejs/plugin-react";
-import jsconfigPaths from "vite-jsconfig-paths";
 
+import fs from "fs";
 import path from "path";
 
 const resolvePath = (str) => path.resolve(__dirname, str);
+
+// Absolute imports from src (jsconfig baseUrl "src"): 'components/Foo', 'lib/api', 'config', ...
+const srcDir = resolvePath("src");
+const srcRoots = [
+  ...new Set(fs.readdirSync(srcDir).map((name) => name.replace(/\.jsx?$/, ""))),
+].map((name) => name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+const srcAlias = {
+  find: new RegExp(`^(${srcRoots.join("|")})(/.*)?$`),
+  replacement: `${srcDir}/$1$2`,
+};
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), "");
@@ -28,6 +38,7 @@ export default defineConfig(({ mode }) => {
     },
     resolve: {
       alias: [
+        srcAlias,
         // { find: '', replacement: path.resolve(__dirname, 'src') },
         // {
         //   find: /^~(.+)/,
@@ -83,7 +94,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     base: API_URL,
-    plugins: [react(), jsconfigPaths()],
+    plugins: [react()],
     test: {
       environment: "jsdom",
       globals: true,
