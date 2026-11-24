@@ -5,6 +5,9 @@ CLAUDE.md
 CLAUDE.local.md
 AGENTS.md
 MEMORY.md
+REVIEW-CHECKLIST.md
+agent_docs/
+vibe.project.json
 .claude/
 graphify-out/
 docs/
