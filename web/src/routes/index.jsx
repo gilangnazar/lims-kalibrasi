@@ -12,7 +12,17 @@ const HomePage = Loadable(lazy(() => import('views/Home')));
 const NotFoundPage = Loadable(lazy(() => import('views/NotFound')));
 
 // One component per menu code in config/pages.js; the route needs `view` on that menu.
+const OrderList = lazy(() => import('features/orders/OrderList'));
+const namedExport = (name) => Loadable(lazy(() => import('features/orders/OrderList').then((module) => ({ default: module[name] }))));
+const OrderRequestForm = Loadable(lazy(() => import('features/orders/OrderRequestForm')));
+const OrderDetail = Loadable(lazy(() => import('features/orders/OrderDetail')));
+
 const PAGE_COMPONENTS = {
+  orders: Loadable(OrderList),
+  'contract-reviews': namedExport('ContractReviewList'),
+  intake: namedExport('IntakeList'),
+  assignments: namedExport('AssignmentList'),
+  equipment: Loadable(lazy(() => import('features/equipment/EquipmentList'))),
   customers: Loadable(lazy(() => import('features/customers/CustomerList'))),
   'standard-instruments': Loadable(lazy(() => import('features/standard-instruments/StandardInstrumentList'))),
   methods: Loadable(lazy(() => import('features/methods/MethodList'))),
@@ -47,7 +57,28 @@ const router = createBrowserRouter(
           <DashboardLayout />
         </ProtectedRoute>
       ),
-      children: [{ index: true, element: <HomePage /> }, ...pageRoutes, { path: '*', element: <NotFoundPage /> }]
+      children: [
+        { index: true, element: <HomePage /> },
+        ...pageRoutes,
+        {
+          path: 'orders/new',
+          element: (
+            <ProtectedRoute menu="orders" action="add">
+              <OrderRequestForm />
+            </ProtectedRoute>
+          )
+        },
+        // The order page opens from Order, Kaji Ulang, intake and assignment pages.
+        {
+          path: 'orders/:id',
+          element: (
+            <ProtectedRoute anyOf={['orders', 'contract-reviews', 'intake', 'assignments']}>
+              <OrderDetail />
+            </ProtectedRoute>
+          )
+        },
+        { path: '*', element: <NotFoundPage /> }
+      ]
     }
   ],
   { basename: import.meta.env.VITE_APP_BASE_NAME }

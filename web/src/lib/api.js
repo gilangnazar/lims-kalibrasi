@@ -31,32 +31,49 @@ function buildUrl(path, query) {
   return `${BASE_URL}${path}${qs ? `?${qs}` : ''}`;
 }
 
-/** Returns the parsed body { status, error, message, data?, meta? }; throws ApiError on failure. */
-export async function apiRequest(path, { method = 'GET', body, query } = {}) {
+async function send(path, { method = 'GET', body, query, raw = false } = {}) {
   const token = tokenStore.get();
-  const headers = { Accept: 'application/json' };
-  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  const headers = { Accept: raw ? '*/*' : 'application/json' };
+  const isForm = typeof FormData !== 'undefined' && body instanceof FormData;
+  if (body !== undefined && !isForm) headers['Content-Type'] = 'application/json'; // FormData sets its own boundary
   if (token) headers.Authorization = `Bearer ${token}`;
 
   let res;
   try {
-    res = await fetch(buildUrl(path, query), { method, headers, body: body === undefined ? undefined : JSON.stringify(body) });
+    res = await fetch(buildUrl(path, query), { method, headers, body: body === undefined || isForm ? body : JSON.stringify(body) });
   } catch {
     throw new ApiError(0, 'Tidak dapat terhubung ke server');
   }
 
-  const payload = await res.json().catch(() => ({}));
   if (!res.ok) {
+    const payload = await res.json().catch(() => ({}));
     // Only a request that carried a token means "session expired"; a failed login is just a 401.
     if (res.status === 401 && token) onUnauthorized();
     throw new ApiError(res.status, payload.message || `Permintaan gagal (${res.status})`, payload.details);
   }
-  return payload;
+  return res;
+}
+
+/** Returns the parsed body { status, error, message, data?, meta? }; throws ApiError on failure. */
+export async function apiRequest(path, options = {}) {
+  const res = await send(path, options);
+  return res.json().catch(() => ({}));
 }
 
 export const api = {
   get: (path, query) => apiRequest(path, { query }),
   post: (path, body = {}) => apiRequest(path, { method: 'POST', body }),
   put: (path, body = {}) => apiRequest(path, { method: 'PUT', body }),
-  delete: (path) => apiRequest(path, { method: 'DELETE' })
+  delete: (path) => apiRequest(path, { method: 'DELETE' }),
+  /** multipart/form-data (file uploads): api.postForm('/orders/1/po', formData). */
+  postForm: (path, formData) => apiRequest(path, { method: 'POST', body: formData }),
+  /** A file (PDF, image) as a Blob, sent with the login token. */
+  blob: async (path) => (await send(path, { raw: true })).blob()
 };
+
+/** Opens a protected file (attachment, PDF) in a new tab. */
+export async function openFile(path) {
+  const url = URL.createObjectURL(await api.blob(path));
+  window.open(url, '_blank', 'noopener');
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
