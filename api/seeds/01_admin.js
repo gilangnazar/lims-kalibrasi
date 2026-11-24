@@ -12,11 +12,12 @@ exports.seed = async (knex) => {
     throw new Error(`Set SEED_ADMIN_PASSWORD (min. ${minLength} characters) in api/.env before running the seed.`);
   }
 
-  await knex('users').insert({
+  const [id] = await knex('users').insert({
     username: 'admin',
     email: 'admin@example.com',
     full_name: 'Administrator',
-    password_hash: await bcrypt.hash(password, 10),
-    role: 'Admin'
+    password_hash: await bcrypt.hash(password, 10)
   });
+  const admin = await knex('roles').where({ name: 'Admin' }).first();
+  await knex('user_roles').insert({ user_id: id, role_id: admin.id });
 };

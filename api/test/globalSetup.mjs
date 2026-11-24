@@ -20,5 +20,6 @@ export async function setup() {
   const knex = require('knex')(require('../knexfile.js'));
   await knex.migrate.rollback(undefined, true);
   await knex.migrate.latest();
+  await require('../src/lib/syncMenus.js')(knex);
   await knex.destroy();
 }

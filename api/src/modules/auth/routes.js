@@ -11,6 +11,7 @@ const respond = require('../../lib/respond');
 const authenticate = require('../../middleware/authenticate');
 const validate = require('../../middleware/validate');
 const users = require('../users/service');
+const { permissionsOf, menuTreeFor } = require('../../lib/access');
 const { password } = require('../users/schema');
 
 const router = express.Router();
@@ -24,6 +25,12 @@ const loginLimiter = rateLimit({
   handler: (_req, _res, next) => next(new AppError(429, 'Terlalu banyak percobaan login. Coba lagi dalam 15 menit.'))
 });
 
+// The signed-in user plus what the UI needs: permissions ["menu:action"] and the visible menu tree.
+async function session(userId) {
+  const permissions = await permissionsOf(userId);
+  return { ...(await users.get(userId)), permissions: [...permissions].sort(), menus: await menuTreeFor(permissions) };
+}
+
 const loginBody = z.object({ username: z.string().trim().min(1), password: z.string().min(1) });
 
 router.post('/login', loginLimiter, validate({ body: loginBody }), async (req, res) => {
@@ -32,16 +39,16 @@ router.post('/login', loginLimiter, validate({ body: loginBody }), async (req, r
   const valid = user && user.is_active && (await bcrypt.compare(plain, user.password_hash));
   if (!valid) throw AppError.unauthorized('Username atau password salah');
 
-  const token = jwt.sign({ userId: user.id, role: user.role }, env.jwt.secret, { expiresIn: env.jwt.expiresIn });
+  const token = jwt.sign({ userId: user.id }, env.jwt.secret, { expiresIn: env.jwt.expiresIn });
   await audit({ userId: user.id, action: 'login', entity: 'users', entityId: user.id });
-  respond.ok(res, { token, user: await users.get(user.id) }, 'Login berhasil');
+  respond.ok(res, { token, user: await session(user.id) }, 'Login berhasil');
 });
 
 // JWTs are stateless: logout is handled by the client discarding the token.
 router.post('/logout', (_req, res) => respond.ok(res, undefined, 'Logout berhasil'));
 
 router.get('/me', authenticate, async (req, res) => {
-  respond.ok(res, await users.get(req.user.id));
+  respond.ok(res, await session(req.user.id));
 });
 
 const changePasswordBody = z.object({ current_password: z.string().min(1), new_password: password });

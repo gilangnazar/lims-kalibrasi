@@ -4,7 +4,6 @@ const AppError = require('../../lib/AppError');
 const audit = require('../../lib/audit');
 const crudRouter = require('../../lib/crudRouter');
 const { listQuery, applySearch, applySort, paginate } = require('../../lib/pagination');
-const { ROLES } = require('../../config/roles');
 
 // ---- schema
 // parameter_schema drives the calibration worksheet in P2: one entry per measured parameter.
@@ -70,6 +69,5 @@ const service = {
 module.exports = crudRouter({
   service,
   schemas: { list: listQuery, create: fields, update: fields.partial() },
-  readRoles: [ROLES.ADMIN, ROLES.ADMIN_TEKNISI, ROLES.TEKNISI, ROLES.MANAJER_TEKNIS],
-  writeRoles: [ROLES.ADMIN]
+  menu: 'methods'
 });

@@ -4,7 +4,6 @@ const AppError = require('../../lib/AppError');
 const audit = require('../../lib/audit');
 const crudRouter = require('../../lib/crudRouter');
 const { listQuery, applySearch, applySort, paginate } = require('../../lib/pagination');
-const { ROLES } = require('../../config/roles');
 
 // ---- schema
 const isoDate = z.iso.date('Format tanggal YYYY-MM-DD').nullable();
@@ -67,6 +66,5 @@ const service = {
 module.exports = crudRouter({
   service,
   schemas: { list: listSchema, create: createSchema, update: fields.partial() },
-  readRoles: [ROLES.ADMIN, ROLES.ADMIN_TEKNISI, ROLES.TEKNISI, ROLES.MANAJER_TEKNIS],
-  writeRoles: [ROLES.ADMIN]
+  menu: 'standard-instruments'
 });
