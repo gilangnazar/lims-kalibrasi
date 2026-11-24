@@ -12,22 +12,44 @@ const parameter = z.object({
   unit: z.string().trim().max(30).default('')
 });
 
+const optionalText = (max) => z.string().trim().max(max).nullable().optional();
 const fields = z.object({
   code: z.string().trim().max(30).nullable().optional(),
   name: z.string().trim().min(1).max(150),
-  description: z.string().trim().max(2000).nullable().optional(),
-  parameter_schema: z.array(parameter).min(1, 'Minimal satu parameter').max(50)
+  description: optionalText(2000),
+  parameter_schema: z.array(parameter).min(1, 'Minimal satu parameter').max(50),
+  // P1–P3: the result template in code, certificate remarks and the extra instrument fields on the request.
+  template_key: z
+    .string()
+    .trim()
+    .regex(/^[a-z0-9_]+$/, 'Hanya huruf kecil, angka, garis bawah')
+    .max(50)
+    .nullable()
+    .optional(),
+  reference: optionalText(2000),
+  uncertainty_reference: optionalText(2000),
+  remarks: z.array(z.string().trim().min(1).max(1000)).max(10).nullable().optional(),
+  extra_spec_fields: z.array(z.string().trim().min(1).max(50)).max(10).nullable().optional(),
+  is_accredited: z.boolean().optional()
 });
 
 // ---- service
 const TABLE = 'methods';
+const JSON_COLUMNS = ['parameter_schema', 'remarks', 'extra_spec_fields'];
 
 // mysql2 usually parses JSON columns, but be defensive in case a driver setting returns a string.
-const parse = (row) =>
-  row && { ...row, parameter_schema: typeof row.parameter_schema === 'string' ? JSON.parse(row.parameter_schema) : row.parameter_schema };
+const parse = (row) => {
+  if (!row) return row;
+  const out = { ...row, is_accredited: Boolean(row.is_accredited) };
+  for (const key of JSON_COLUMNS) if (typeof out[key] === 'string') out[key] = JSON.parse(out[key]);
+  return out;
+};
 
-const serialize = (input) =>
-  input.parameter_schema === undefined ? input : { ...input, parameter_schema: JSON.stringify(input.parameter_schema) };
+const serialize = (input) => {
+  const out = { ...input };
+  for (const key of JSON_COLUMNS) if (out[key] !== undefined && out[key] !== null) out[key] = JSON.stringify(out[key]);
+  return out;
+};
 
 const service = {
   async list({ page, limit, search, sort }) {

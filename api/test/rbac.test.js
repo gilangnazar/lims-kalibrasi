@@ -70,7 +70,7 @@ describe('RBAC — permissions', () => {
     expect((await api().put(`/api/roles/${id}/permissions`).set(bearer(token)).send({ permissions: {} })).status).toBe(400);
     const grid = await api().get(`/api/roles/${id}/permissions`).set(bearer(token));
     expect(grid.body.data.locked).toBe(true);
-    expect(grid.body.data.groups.map((group) => group.code)).toEqual(['master-data', 'administration']);
+    expect(grid.body.data.groups.map((group) => group.code)).toEqual(['order-intake', 'master-data', 'administration']);
     for (const menu of grid.body.data.menus) expect(menu.granted).toEqual(menu.actions);
   });
 });

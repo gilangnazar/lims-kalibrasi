@@ -37,4 +37,38 @@ exports.seed = async (knex) => {
       ])
     });
   }
+
+  // The MVP method (Enclosure / Oven), from docs/master-data/methods.csv (dummy until the lab's data).
+  if (!(await knex('methods').where({ code: 'LKAL-IK/01.01/25' }).first())) {
+    await knex('methods').insert({
+      code: 'LKAL-IK/01.01/25',
+      name: 'Instruksi Kerja Suhu Enklosur',
+      description: 'Kalibrasi oven / enklosur suhu',
+      parameter_schema: JSON.stringify([{ name: 'Suhu', unit: '°C' }]),
+      template_key: 'oven',
+      reference: 'KAN Pd-02-04 : 2019, Pedoman Kalibrasi Enklosur Suhu - Revisi 0',
+      uncertainty_reference: 'JCGM 100-2008 : Evaluation of measurement data - Guide to expression of uncertainty in measurement',
+      remarks: JSON.stringify([
+        'Ketidakpastian pengukuran diestimasi pada tingkat kepercayaan 95% dengan faktor cakupan (k) = 2',
+        'Hasil kalibrasi yang dilaporkan dapat ditelusuri ke satuan SI melalui laboratorium kalibrasi yang terakreditasi'
+      ]),
+      extra_spec_fields: JSON.stringify(['Volume']),
+      is_accredited: false
+    });
+  }
+
+  // A demo instrument in the customer equipment registry (pre-fills order items).
+  const demoCustomer = await knex('customers').orderBy('id').first();
+  if (demoCustomer && !(await knex('equipment').first())) {
+    await knex('equipment').insert({
+      customer_id: demoCustomer.id,
+      name: 'Oven',
+      brand: 'Memmert',
+      model: 'UN55',
+      serial_number: 'DEMO-OVEN-001',
+      identity_no: 'F.03/001/SAI/2022',
+      range: '(30 - 300) °C',
+      resolution: '0,1 °C'
+    });
+  }
 };

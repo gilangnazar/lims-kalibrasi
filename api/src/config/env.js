@@ -28,5 +28,7 @@ module.exports = {
   corsOrigins: (process.env.CORS_ORIGINS || 'http://localhost:3000')
     .split(',')
     .map((origin) => origin.trim())
-    .filter(Boolean)
+    .filter(Boolean),
+  // Uploaded files (PO, photos, signatures…) live outside the web root. Tests use their own folder.
+  uploadDir: path.resolve(__dirname, '../..', process.env.UPLOAD_DIR || (isTest ? 'uploads-test' : 'uploads'))
 };

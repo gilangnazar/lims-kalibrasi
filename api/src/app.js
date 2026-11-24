@@ -21,6 +21,10 @@ const mounts = [
   ['/api/customers', require('./modules/customers')],
   ['/api/standard-instruments', require('./modules/standardInstruments')],
   ['/api/methods', require('./modules/methods')],
+  ['/api/equipment', require('./modules/equipment')],
+  ['/api/orders', require('./modules/orders/routes').orders],
+  ['/api/order-items', require('./modules/orders/routes').orderItems],
+  ['/api/attachments', require('./modules/attachments')],
   ['/api/audit-logs', require('./modules/auditLogs')]
 ];
 

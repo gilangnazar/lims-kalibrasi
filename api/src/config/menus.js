@@ -9,10 +9,25 @@ const CRUD = ['view', 'add', 'edit', 'delete'];
 // Top-level entries are groups (no path, no actions); children are the pages.
 const MENU_TREE = Object.freeze([
   {
+    code: 'order-intake',
+    label: 'Order & Penerimaan',
+    children: [
+      // Request, items, other costs, PO, cancel; temporary manual "quoted" / "DP paid" until steps 07–08.
+      { code: 'orders', label: 'Order', path: '/orders', actions: ['view', 'add', 'edit', 'delete', 'cancel', 'print'] },
+      // Manajer Teknis: Kaji Ulang decision (accept / reject) per order.
+      { code: 'contract-reviews', label: 'Kaji Ulang', path: '/contract-reviews', actions: ['view', 'approve'] },
+      // Receive in-lab items, photos, UUT check (in-lab and on-site), client signature, customer agreement.
+      { code: 'intake', label: 'Penerimaan & Pemeriksaan', path: '/intake', actions: ['view', 'edit'] },
+      // Assign items to a Teknisi, on-site team and visits, Surat Tugas.
+      { code: 'assignments', label: 'Penugasan & Surat Tugas', path: '/assignments', actions: ['view', 'edit', 'print'] }
+    ]
+  },
+  {
     code: 'master-data',
     label: 'Master Data',
     children: [
       { code: 'customers', label: 'Pelanggan', path: '/customers', actions: CRUD },
+      { code: 'equipment', label: 'Alat Pelanggan', path: '/equipment', actions: CRUD },
       { code: 'standard-instruments', label: 'Standard Instrument', path: '/standard-instruments', actions: CRUD },
       { code: 'methods', label: 'Metode Kalibrasi', path: '/methods', actions: CRUD }
     ]

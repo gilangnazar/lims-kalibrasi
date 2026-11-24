@@ -11,12 +11,36 @@ const DEMO_USERS = [
   { username: 'teknisi', full_name: 'Demo Teknisi', role: 'Teknisi' }
 ];
 
-const LAB_READ = ['customers:view', 'standard-instruments:view', 'methods:view'];
+const LAB_READ = ['customers:view', 'standard-instruments:view', 'methods:view', 'equipment:view'];
 const DEMO_GRANTS = {
-  Finance: ['customers:view'],
-  'Admin Teknisi': LAB_READ,
-  'Manajer Teknis': LAB_READ,
-  Teknisi: LAB_READ
+  Finance: ['customers:view', 'orders:view'],
+  // Appendix A: "Admin and Admin Teknisi share the same access for now" for orders and intake.
+  'Admin Teknisi': [
+    ...LAB_READ,
+    'equipment:add',
+    'equipment:edit',
+    'orders:view',
+    'orders:add',
+    'orders:edit',
+    'orders:print',
+    'contract-reviews:view',
+    'intake:view',
+    'intake:edit',
+    'assignments:view'
+  ],
+  'Manajer Teknis': [
+    ...LAB_READ,
+    'orders:view',
+    'orders:print',
+    'contract-reviews:view',
+    'contract-reviews:approve',
+    'intake:view',
+    'assignments:view',
+    'assignments:edit',
+    'assignments:print'
+  ],
+  // On-site the Teknisi checks the UUT and records the client's signature.
+  Teknisi: [...LAB_READ, 'orders:view', 'intake:view', 'intake:edit', 'assignments:view']
 };
 
 exports.seed = async (knex) => {
@@ -35,7 +59,10 @@ exports.seed = async (knex) => {
       const [id] = await knex('users').insert({ ...user, email: `${user.username}@example.com`, password_hash });
       existing = { id };
     }
-    await knex('user_roles').insert({ user_id: existing.id, role_id: await roleId(role) }).onConflict().ignore();
+    await knex('user_roles')
+      .insert({ user_id: existing.id, role_id: await roleId(role) })
+      .onConflict()
+      .ignore();
   }
 
   const menuIds = new Map((await knex('menus').select('id', 'code')).map((menu) => [menu.code, menu.id]));

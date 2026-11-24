@@ -11,7 +11,24 @@ let passwordHash;
 // Child tables first so foreign keys never block the delete. System roles, menus and Admin's
 // grants (from syncMenus in globalSetup) stay; grants given by tests and custom roles go.
 async function resetDb() {
-  for (const table of ['audit_logs', 'user_roles', 'users', 'customers', 'standard_instruments', 'methods']) {
+  for (const table of [
+    'audit_logs',
+    'attachments',
+    'assignment_letters',
+    'order_onsite_team',
+    'order_onsite_visits',
+    'contract_reviews',
+    'order_items',
+    'order_other_costs',
+    'orders',
+    'number_sequences',
+    'equipment',
+    'user_roles',
+    'users',
+    'customers',
+    'standard_instruments',
+    'methods'
+  ]) {
     await db(table).del();
   }
   const admin = await db('roles').where({ name: 'Admin' }).first();
