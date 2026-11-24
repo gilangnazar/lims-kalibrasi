@@ -20,7 +20,8 @@ const mounts = [
   ['/api/menus', require('./modules/menus')],
   ['/api/customers', require('./modules/customers')],
   ['/api/standard-instruments', require('./modules/standardInstruments')],
-  ['/api/methods', require('./modules/methods')]
+  ['/api/methods', require('./modules/methods')],
+  ['/api/audit-logs', require('./modules/auditLogs')]
 ];
 
 app.use('/api/auth', require('./modules/auth/routes')); // public login + own-account routes

@@ -55,7 +55,7 @@ router.put('/:id', requirePermission('menus', 'edit'), validate({ params: idPara
   }
   if (Object.keys(input).length) {
     await db('menus').where({ id }).update(input);
-    await audit({ userId: req.user.id, action: 'update', entity: 'menus', entityId: id, changes: input });
+    await audit({ userId: req.user.id, action: 'update', entity: 'menus', entityId: id, before: menu, after: input });
   }
   respond.ok(res, toPublic(await db('menus').where({ id }).first()), 'Menu berhasil diperbarui');
 });

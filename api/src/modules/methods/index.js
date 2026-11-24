@@ -46,23 +46,23 @@ const service = {
 
   async create(input, actor) {
     const [id] = await db(TABLE).insert(serialize(input));
-    await audit({ userId: actor.id, action: 'create', entity: TABLE, entityId: id, changes: input });
+    await audit({ userId: actor.id, action: 'create', entity: TABLE, entityId: id, after: input });
     return service.get(id);
   },
 
   async update(id, input, actor) {
-    await service.get(id);
+    const before = await service.get(id);
     if (Object.keys(input).length) {
       await db(TABLE).where({ id }).update(serialize(input));
-      await audit({ userId: actor.id, action: 'update', entity: TABLE, entityId: id, changes: input });
+      await audit({ userId: actor.id, action: 'update', entity: TABLE, entityId: id, before, after: input });
     }
     return service.get(id);
   },
 
   async remove(id, actor) {
-    await service.get(id);
+    const before = await service.get(id);
     await db(TABLE).where({ id }).delete();
-    await audit({ userId: actor.id, action: 'delete', entity: TABLE, entityId: id });
+    await audit({ userId: actor.id, action: 'delete', entity: TABLE, entityId: id, before });
   }
 };
 

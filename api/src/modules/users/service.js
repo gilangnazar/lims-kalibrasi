@@ -93,7 +93,14 @@ async function create(input, actor) {
         action: 'create',
         entity: 'users',
         entityId: newId,
-        changes: { username: input.username, roles: roles.map((role) => role.name) }
+        after: {
+          username: input.username,
+          email: input.email,
+          full_name: input.full_name,
+          customer_id: customerId,
+          is_active: input.is_active,
+          roles: roles.map((role) => role.name)
+        }
       },
       trx
     );
@@ -118,14 +125,16 @@ async function update(id, input, actor) {
   if (input.password) patch.password_hash = await bcrypt.hash(input.password, 10);
   if (Object.keys(patch).length === 0 && !newRoles) return current;
 
-  const { password_hash, ...logged } = patch;
-  if (password_hash) logged.password = 'changed';
-  if (newRoles) logged.roles = newRoles.map((role) => role.name);
+  // Audit: role names instead of ids; a password change shows as "password_changed", never the value.
+  const { password_hash, ...after } = patch;
+  if (password_hash) after.password_changed = true;
+  if (newRoles) after.roles = newRoles.map((role) => role.name);
+  const before = { ...current, roles: current.roles.map((role) => role.name), password_changed: false };
 
   await db.transaction(async (trx) => {
     if (Object.keys(patch).length) await trx('users').where({ id }).update(patch);
     if (newRoles) await replaceRoles(trx, id, newRoles);
-    await audit({ userId: actor.id, action: 'update', entity: 'users', entityId: id, changes: logged }, trx);
+    await audit({ userId: actor.id, action: 'update', entity: 'users', entityId: id, before, after }, trx);
   });
   return get(id);
 }
@@ -137,7 +146,13 @@ async function remove(id, actor) {
   const current = await get(id);
   if (hasAdmin(current.roles) && current.is_active) await assertAnotherAdmin(id);
   await db('users').where({ id }).delete();
-  await audit({ userId: actor.id, action: 'delete', entity: 'users', entityId: id });
+  await audit({
+    userId: actor.id,
+    action: 'delete',
+    entity: 'users',
+    entityId: id,
+    before: { ...current, roles: current.roles.map((role) => role.name) }
+  });
 }
 
 module.exports = { list, get, create, update, setRoles, remove, PUBLIC_COLUMNS };

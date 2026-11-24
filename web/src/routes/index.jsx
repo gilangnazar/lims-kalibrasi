@@ -18,7 +18,8 @@ const PAGE_COMPONENTS = {
   methods: Loadable(lazy(() => import('features/methods/MethodList'))),
   users: Loadable(lazy(() => import('features/users/UserList'))),
   roles: Loadable(lazy(() => import('features/roles/RoleList'))),
-  menus: Loadable(lazy(() => import('features/menus/MenuManagement')))
+  menus: Loadable(lazy(() => import('features/menus/MenuManagement'))),
+  'audit-trail': Loadable(lazy(() => import('features/audit-trail/AuditTrail')))
 };
 
 const pageRoutes = Object.entries(PAGES).map(([menu, { path }]) => {

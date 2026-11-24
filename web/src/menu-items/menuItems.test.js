@@ -13,7 +13,7 @@ describe('buildMenuItems', () => {
 
   it('skips pages the web does not have yet and drops empty groups', () => {
     const { items } = buildMenuItems([
-      { code: 'administration', label: 'Administrasi', children: [{ code: 'audit-trail', label: 'Audit Trail', path: '/audit-trail' }] }
+      { code: 'administration', label: 'Administrasi', children: [{ code: 'reports', label: 'Laporan', path: '/reports' }] }
     ]);
     expect(items).toEqual([]);
   });

@@ -61,7 +61,7 @@ router.post('/change-password', authenticate, validate({ body: changePasswordBod
   await db('users')
     .where({ id: user.id })
     .update({ password_hash: await bcrypt.hash(new_password, 10) });
-  await audit({ userId: user.id, action: 'change_password', entity: 'users', entityId: user.id });
+  await audit({ userId: user.id, action: 'change_password', entity: 'users', entityId: user.id, after: { password_changed: true } });
   respond.ok(res, undefined, 'Password berhasil diubah');
 });
 

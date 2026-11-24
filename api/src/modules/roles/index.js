@@ -47,7 +47,7 @@ const service = {
 
   async create(input, actor) {
     const [id] = await db('roles').insert({ ...input, is_system: false });
-    await audit({ userId: actor.id, action: 'create', entity: 'roles', entityId: id, changes: input });
+    await audit({ userId: actor.id, action: 'create', entity: 'roles', entityId: id, after: input });
     return service.get(id);
   },
 
@@ -64,7 +64,7 @@ const service = {
     }
     if (Object.keys(input).length) {
       await db('roles').where({ id }).update(input);
-      await audit({ userId: actor.id, action: 'update', entity: 'roles', entityId: id, changes: input });
+      await audit({ userId: actor.id, action: 'update', entity: 'roles', entityId: id, before: role, after: input });
     }
     return service.get(id);
   },
@@ -74,7 +74,7 @@ const service = {
     if (role.is_system) throw AppError.badRequest('Role sistem tidak dapat dihapus');
     if (role.user_count > 0) throw AppError.badRequest('Role masih dipakai oleh user');
     await db('roles').where({ id }).delete(); // role_permissions cascade
-    await audit({ userId: actor.id, action: 'delete', entity: 'roles', entityId: id, changes: { name: role.name } });
+    await audit({ userId: actor.id, action: 'delete', entity: 'roles', entityId: id, before: role });
   },
 
   /** The grid: every registry page with its allowed and granted actions, in menu order. */
@@ -127,10 +127,17 @@ const service = {
       for (const action of actions) rows.push({ role_id: id, menu_id: menuIds.get(code), action });
     }
 
+    // Old vs new grid per menu, e.g. { customers: ["view"] } → { customers: ["view", "add"] }.
+    const current = await service.getPermissions(id);
+    const previous = Object.fromEntries(current.menus.filter((menu) => menu.granted.length).map((menu) => [menu.code, menu.granted]));
+    const codes = [...new Set([...Object.keys(previous), ...Object.keys(saved)])];
+    const before = Object.fromEntries(codes.map((code) => [code, previous[code] ?? []]));
+    const after = Object.fromEntries(codes.map((code) => [code, saved[code] ?? []]));
+
     await db.transaction(async (trx) => {
       await trx('role_permissions').where({ role_id: id }).delete();
       if (rows.length) await trx('role_permissions').insert(rows);
-      await audit({ userId: actor.id, action: 'update_permissions', entity: 'roles', entityId: id, changes: { permissions: saved } }, trx);
+      await audit({ userId: actor.id, action: 'update_permissions', entity: 'roles', entityId: id, before, after }, trx);
     });
     return service.getPermissions(id);
   }

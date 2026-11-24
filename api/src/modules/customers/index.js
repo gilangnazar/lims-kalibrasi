@@ -40,25 +40,25 @@ const service = {
       await trx('customers')
         .where({ id: newId })
         .update({ code: `CUST-${String(newId).padStart(4, '0')}` });
-      await audit({ userId: actor.id, action: 'create', entity: 'customers', entityId: newId, changes: input }, trx);
+      await audit({ userId: actor.id, action: 'create', entity: 'customers', entityId: newId, after: input }, trx);
       return newId;
     });
     return service.get(id);
   },
 
   async update(id, input, actor) {
-    await service.get(id);
+    const before = await service.get(id);
     if (Object.keys(input).length) {
       await db('customers').where({ id }).update(input);
-      await audit({ userId: actor.id, action: 'update', entity: 'customers', entityId: id, changes: input });
+      await audit({ userId: actor.id, action: 'update', entity: 'customers', entityId: id, before, after: input });
     }
     return service.get(id);
   },
 
   async remove(id, actor) {
-    await service.get(id);
+    const before = await service.get(id);
     await db('customers').where({ id }).update({ deleted_at: db.fn.now() });
-    await audit({ userId: actor.id, action: 'delete', entity: 'customers', entityId: id });
+    await audit({ userId: actor.id, action: 'delete', entity: 'customers', entityId: id, before });
   }
 };
 
