@@ -47,3 +47,6 @@ desktop.ini
 # --- Uploaded files (api/uploads, api/uploads-test) ---
 uploads/
 uploads-test/
+
+# --- Puppeteer browser (npm run pdf:install) ---
+api/.cache/

@@ -16,6 +16,7 @@ import { useAuth } from 'hooks/useAuth';
 import { api, openFile } from 'lib/api';
 import ActionModal from './ActionModal';
 import ContractReviewForm from './ContractReviewForm';
+import DocumentsMenu from './DocumentsMenu';
 import ItemActions, { ItemFormModal } from './ItemActions';
 import OnsitePanel from './OnsitePanel';
 import { CONDITION, formatDate, ITEM_STATUS, LOCATION, ORDER_STATUS, useOrder } from './shared';
@@ -169,7 +170,12 @@ export default function OrderDetail() {
             {order.order_no} <Badge bg={status?.bg}>{status?.label ?? order.status}</Badge>
           </span>
         }
-        secondary={<OrderActions order={order} run={run} />}
+        secondary={
+          <div className="d-flex flex-wrap gap-2 align-items-start">
+            <DocumentsMenu order={order} />
+            <OrderActions order={order} run={run} />
+          </div>
+        }
       >
         {order.cancel_reason && <Alert variant="danger">Dibatalkan: {order.cancel_reason}</Alert>}
         <Row>

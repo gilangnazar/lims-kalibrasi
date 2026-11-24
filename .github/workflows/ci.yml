@@ -56,6 +56,10 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      # npm 12 blocks Puppeteer's install script, so fetch its headless Chrome explicitly (PDF tests).
+      - name: Headless Chrome for PDFs
+        run: npm --prefix api run pdf:install
+
       - name: API tests
         run: npm --prefix api test
 

@@ -6,9 +6,18 @@ const validate = require('../../middleware/validate');
 const respond = require('../../lib/respond');
 const { idParams } = require('../../lib/params');
 const { upload, discardFiles } = require('../../lib/uploads');
+const { z } = require('zod');
+const db = require('../../db');
+const AppError = require('../../lib/AppError');
+const { renderPdf } = require('../../lib/pdf');
+const { getSettings } = require('../../lib/settings');
+const { DOCUMENTS } = require('../../templates/orderDocuments');
 const schema = require('./schema');
 const service = require('./service');
 const items = require('./items');
+
+const LAB_KEYS = ['lab_name', 'lab_address', 'lab_phone', 'lab_email', 'lab_city'];
+const documentParams = idParams.extend({ kind: z.enum(Object.keys(DOCUMENTS)) });
 
 // Pages that open an order: Order, Kaji Ulang, Penerimaan & Pemeriksaan, Penugasan & Surat Tugas.
 const canSeeOrders = requireAnyPermission('orders:view', 'contract-reviews:view', 'intake:view', 'assignments:view');
@@ -99,6 +108,36 @@ orders.put(
 orders.post('/:id/assignment-letter', requirePermission('assignments', 'edit'), validate({ params: idParams }), async (req, res) => {
   respond.ok(res, await service.issueAssignmentLetter(req.valid.params.id, req.user), 'Surat Tugas berhasil diterbitkan');
 });
+
+// Printed forms of the order flow, rendered on request (not stored).
+orders.get(
+  '/:id/documents/:kind/pdf',
+  requireAnyPermission('orders:print', 'assignments:print'),
+  validate({ params: documentParams }),
+  async (req, res) => {
+    const { id, kind } = req.valid.params;
+    const order = await service.get(id, req.user);
+    const doc = DOCUMENTS[kind];
+    if (!doc.ready(order)) throw AppError.badRequest('Dokumen belum tersedia untuk tahap order ini');
+    const lab = await getSettings(LAB_KEYS);
+    // The Serah Terima names whoever received/checked the items last.
+    const inspector = await db('audit_logs as a')
+      .join('users as u', 'u.id', 'a.user_id')
+      .where('a.entity', 'order_items')
+      .whereIn('a.action', ['receive', 'check'])
+      .whereIn(
+        'a.entity_id',
+        order.items.map((item) => item.id)
+      )
+      .orderBy('a.id', 'desc')
+      .first('u.full_name');
+    const pdf = await renderPdf(doc.render({ order, lab, inspector: inspector?.full_name }));
+    const fileName = `${doc.title} ${order.order_no}`.replace(/[^\w\- ]+/g, '-');
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="${fileName}.pdf"`);
+    res.send(pdf);
+  }
+);
 
 // ---- /api/order-items
 const orderItems = express.Router();
