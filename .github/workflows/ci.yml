@@ -11,8 +11,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # 22.12 = engines floor (Puppeteer 25); 26 = dev LTS (.nvmrc)
-        node: ['22.12', '26']
+        # 22.22.2 = lowest 22.x the web test tools accept (jsdom 31; API floor is 22.12 for Puppeteer); 26 = dev LTS (.nvmrc)
+        node: ['22.22.2', '26']
 
     services:
       mysql:
