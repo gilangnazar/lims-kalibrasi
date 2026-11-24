@@ -7,7 +7,7 @@ describe('auth', () => {
 
     expect(res.status).toBe(200);
     expect(res.body.data.token).toBeTruthy();
-    expect(res.body.data.user).toMatchObject({ username: user.username, role: 'Teknisi' });
+    expect(res.body.data.user).toMatchObject({ username: user.username, roles: [{ name: 'Teknisi' }] });
     expect(res.body.data.user.password_hash).toBeUndefined();
   });
 
@@ -33,7 +33,7 @@ describe('auth', () => {
     const { user, token } = await createUser('Finance');
     const res = await api().get('/api/auth/me').set('Authorization', `Bearer ${token}`);
     expect(res.status).toBe(200);
-    expect(res.body.data).toMatchObject({ id: user.id, role: 'Finance' });
+    expect(res.body.data).toMatchObject({ id: user.id, roles: [{ name: 'Finance' }], permissions: [], menus: [] });
   });
 
   it('changes password only when the current password is correct', async () => {

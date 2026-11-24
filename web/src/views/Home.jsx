@@ -3,22 +3,23 @@ import Col from 'react-bootstrap/Col';
 import Row from 'react-bootstrap/Row';
 
 import MainCard from 'components/MainCard';
-import { can } from 'config/permissions';
 import { useAuth } from 'hooks/useAuth';
-import menuItems from 'menu-items';
+import { useMenuItems } from 'hooks/useMenuItems';
 
 // Placeholder home until role dashboards arrive (roadmap P6): greets the user and links to what they can open.
 export default function Home() {
   const { user } = useAuth();
-  const shortcuts = menuItems.items.flatMap((group) => group.children ?? []).filter((item) => item.url && can(user, item.permission));
+  const { items } = useMenuItems();
+  const shortcuts = items.flatMap((group) => group.children);
+  const roleNames = (user?.roles ?? []).map((role) => role.name).join(', ') || '-';
 
   return (
     <MainCard title={`Selamat datang, ${user?.full_name ?? ''}`}>
       <p className="text-muted">
-        Anda masuk sebagai <strong>{user?.role}</strong>.
+        Anda masuk sebagai <strong>{roleNames}</strong>.
       </p>
       {shortcuts.length === 0 ? (
-        <p className="mb-0">Belum ada menu yang tersedia untuk peran Anda.</p>
+        <p className="mb-0">Belum ada menu yang tersedia untuk peran Anda. Hubungi Admin untuk mengatur hak akses.</p>
       ) : (
         <Row className="g-3">
           {shortcuts.map((item) => (

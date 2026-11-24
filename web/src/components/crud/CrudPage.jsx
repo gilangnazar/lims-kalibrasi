@@ -15,12 +15,26 @@ const PAGE_SIZE = 20;
 
 /**
  * List + search + pagination + create/edit modal + delete confirm for one API resource.
- * `resource` is both the API path (/api/<resource>) and the permission prefix (<resource>.write).
- * FormComponent receives { initialData, mode, onSubmit(values), onCancel }.
+ * `resource` is the API path (/api/<resource>); `menu` the permission menu code (defaults to resource):
+ * buttons follow add / edit / delete on that menu. FormComponent receives { initialData, mode, onSubmit(values), onCancel }.
+ * Optional: `rowActions(row)` renders extra buttons before Edit/Hapus; `canDeleteRow(row)` hides Hapus per row.
  */
-export default function CrudPage({ resource, title, entityLabel, columns, FormComponent, getItemName, modalSize }) {
+export default function CrudPage({
+  resource,
+  menu = resource,
+  title,
+  entityLabel,
+  columns,
+  FormComponent,
+  getItemName,
+  modalSize,
+  rowActions,
+  canDeleteRow = () => true
+}) {
   const { user } = useAuth();
-  const canWrite = can(user, `${resource}.write`);
+  const canAdd = can(user, menu, 'add');
+  const canEdit = can(user, menu, 'edit');
+  const canDelete = can(user, menu, 'delete');
 
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState('');
@@ -65,7 +79,7 @@ export default function CrudPage({ resource, title, entityLabel, columns, FormCo
         aria-label={`Cari ${entityLabel}`}
         style={{ minWidth: 200 }}
       />
-      {canWrite && (
+      {canAdd && (
         <Button size="sm" variant="light-primary" className="d-inline-flex text-nowrap" onClick={() => setEditing({})}>
           <i className="ph ph-plus-square me-1 align-self-center" />
           Tambah
@@ -74,18 +88,24 @@ export default function CrudPage({ resource, title, entityLabel, columns, FormCo
     </div>
   );
 
-  const actions = canWrite
-    ? (row) => (
-        <>
-          <Button variant="warning" size="sm" className="me-2" onClick={() => setEditing(row)}>
-            Edit
-          </Button>
-          <Button variant="danger" size="sm" onClick={() => setDeleting(row)}>
-            Hapus
-          </Button>
-        </>
-      )
-    : undefined;
+  const actions =
+    canEdit || canDelete || rowActions
+      ? (row) => (
+          <>
+            {rowActions?.(row)}
+            {canEdit && (
+              <Button variant="warning" size="sm" className="ms-2" onClick={() => setEditing(row)}>
+                Edit
+              </Button>
+            )}
+            {canDelete && canDeleteRow(row) && (
+              <Button variant="danger" size="sm" className="ms-2" onClick={() => setDeleting(row)}>
+                Hapus
+              </Button>
+            )}
+          </>
+        )
+      : undefined;
 
   return (
     <>

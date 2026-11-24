@@ -80,7 +80,10 @@ const service = {
   /** The grid: every registry page with its allowed and granted actions, in menu order. */
   async getPermissions(id) {
     const role = await service.get(id);
-    const menus = await db('menus').whereIn('code', MENUS.map((menu) => menu.code));
+    const menus = await db('menus').whereIn(
+      'code',
+      MENUS.map((menu) => menu.code)
+    );
     const byCode = new Map(menus.map((menu) => [menu.code, menu]));
     const granted = await db('role_permissions as rp')
       .join('menus as m', 'm.id', 'rp.menu_id')
@@ -90,6 +93,10 @@ const service = {
     return {
       role,
       locked: role.name === ADMIN_ROLE,
+      groups: MENUS.filter((menu) => !menu.parent).map((menu) => ({
+        code: menu.code,
+        label: byCode.get(menu.code)?.label ?? menu.label
+      })),
       menus: MENUS.filter((menu) => menu.actions.length).map((menu) => ({
         code: menu.code,
         group: menu.parent,

@@ -89,15 +89,20 @@ describe('users', () => {
 
   it('keeps at least one active admin', async () => {
     const me = await api().get('/api/auth/me').set(auth);
-    const res = await api().put(`/api/users/${me.body.data.id}`).set(auth).send({ role: 'Teknisi' });
+    const teknisi = await db('roles').where({ name: 'Teknisi' }).first();
+    const res = await api()
+      .put(`/api/users/${me.body.data.id}`)
+      .set(auth)
+      .send({ role_ids: [teknisi.id] });
     expect(res.status).toBe(400);
   });
 
   it('requires a customer link for Customer users', async () => {
+    const customer = await db('roles').where({ name: 'Customer' }).first();
     const res = await api()
       .post('/api/users')
       .set(auth)
-      .send({ username: 'portal1', email: 'p@x.co', full_name: 'Portal', role: 'Customer', password: 'password123' });
+      .send({ username: 'portal1', email: 'p@x.co', full_name: 'Portal', role_ids: [customer.id], password: 'password123' });
     expect(res.status).toBe(400);
   });
 });

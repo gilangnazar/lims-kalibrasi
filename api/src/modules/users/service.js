@@ -9,12 +9,11 @@ const { ADMIN_ROLE } = require('../../config/menus');
 // Never select password_hash outside this module.
 const PUBLIC_COLUMNS = ['id', 'username', 'email', 'full_name', 'customer_id', 'is_active', 'created_at', 'updated_at'];
 
-// `role` = first role's name, kept for the web until step 02 (multi-role UI); `roles` is the real list.
 async function withRoles(users) {
   const map = await rolesByUser(users.map((user) => user.id));
   return users.map((user) => {
     const roles = map.get(user.id).map(({ id, name, is_customer_scope }) => ({ id, name, is_customer_scope }));
-    return { ...user, is_active: Boolean(user.is_active), roles, role: roles[0]?.name ?? null };
+    return { ...user, is_active: Boolean(user.is_active), roles };
   });
 }
 
@@ -35,20 +34,13 @@ async function get(id) {
   return (await withRoles([user]))[0];
 }
 
-/** Turns { role } or { role_ids } into role rows; null when neither is given. */
-async function resolveRoles({ role, role_ids }) {
-  if (role_ids) {
-    const ids = [...new Set(role_ids)];
-    const rows = await db('roles').whereIn('id', ids);
-    if (rows.length !== ids.length) throw AppError.badRequest('Role tidak ditemukan');
-    return rows;
-  }
-  if (role) {
-    const row = await db('roles').where({ name: role }).first();
-    if (!row) throw AppError.badRequest('Role tidak ditemukan');
-    return [row];
-  }
-  return null;
+/** Turns role_ids into role rows; null when not given (update without a role change). */
+async function resolveRoles({ role_ids }) {
+  if (!role_ids) return null;
+  const ids = [...new Set(role_ids)];
+  const rows = await db('roles').whereIn('id', ids);
+  if (rows.length !== ids.length) throw AppError.badRequest('Role tidak ditemukan');
+  return rows;
 }
 
 // Customer-scope users (portal) must be linked to a customer and can't also hold staff roles.
@@ -115,8 +107,7 @@ async function update(id, input, actor) {
   const newRoles = await resolveRoles(input);
   const roles = newRoles ?? current.roles;
 
-  const losesAdmin =
-    hasAdmin(current.roles) && current.is_active && ((newRoles && !hasAdmin(newRoles)) || input.is_active === false);
+  const losesAdmin = hasAdmin(current.roles) && current.is_active && ((newRoles && !hasAdmin(newRoles)) || input.is_active === false);
   if (losesAdmin) await assertAnotherAdmin(id);
 
   const patch = {};

@@ -6,7 +6,11 @@ const columns = [
   { key: 'username', header: 'Username' },
   { key: 'full_name', header: 'Nama Lengkap' },
   { key: 'email', header: 'Email' },
-  { key: 'role', header: 'Role' },
+  {
+    key: 'roles',
+    header: 'Role',
+    render: (row) => (row.roles?.length ? row.roles.map((role) => role.name).join(', ') : '-')
+  },
   { key: 'is_active', header: 'Status', render: (row) => <StatusBadge active={row.is_active} /> }
 ];
 

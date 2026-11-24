@@ -8,12 +8,13 @@ import Row from 'react-bootstrap/Row';
 
 // project-imports
 import { APP_DEFAULT_PATH } from 'config';
-import navigation from 'menu-items';
+import { useMenuItems } from 'hooks/useMenuItems';
 
 // ==============================|| MAIN BREADCRUMB ||============================== //
 
 export default function Breadcrumbs() {
   const location = useLocation();
+  const navigation = useMenuItems();
 
   const [main, setMain] = useState({});
   const [item, setItem] = useState({});
@@ -49,7 +50,7 @@ export default function Breadcrumbs() {
         getCollapse(navItem);
       }
     });
-  }, [location.pathname, getCollapse]);
+  }, [location.pathname, getCollapse, navigation]);
 
   let mainContent;
   let itemContent;

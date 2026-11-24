@@ -54,7 +54,7 @@ export default function Header() {
                   <Stack gap={1} className="my-2">
                     <h6 className="text-white mb-0">{user?.full_name}</h6>
                     <span className="text-white text-opacity-75">
-                      {user?.username} · {user?.role}
+                      {user?.username} · {(user?.roles ?? []).map((role) => role.name).join(', ')}
                     </span>
                   </Stack>
                 </Dropdown.Header>

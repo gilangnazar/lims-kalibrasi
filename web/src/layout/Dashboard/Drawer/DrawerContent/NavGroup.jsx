@@ -4,14 +4,11 @@ import { matchPath, useLocation } from 'react-router-dom';
 // project-imports
 import NavItem from './NavItem';
 import NavCollapse from './NavCollapse';
-import { useAuth } from 'hooks/useAuth';
-import { can } from 'config/permissions';
 
 // ==============================|| NAVIGATION - GROUP ||============================== //
 
 export default function NavGroup(props) {
   const { item, lastItem, remItems, lastItemId, setSelectedID, setSelectedItems, selectedItems, setSelectedLevel, selectedLevel } = props;
-  const { user } = useAuth();
   const { pathname } = useLocation();
   const [currentItem, setCurrentItem] = useState(item);
 
@@ -24,9 +21,6 @@ export default function NavGroup(props) {
       setCurrentItem(item);
     }
   }, [item, lastItem, lastItemId, remItems]);
-
-  //  Helper: items without a `permission` are visible to everyone
-  const hasAccess = useCallback((menuItem) => !menuItem.permission || can(user, menuItem.permission), [user]);
 
   //  Helper: Recursively check if route matches
   const findMatchingChild = useCallback(
@@ -58,36 +52,34 @@ export default function NavGroup(props) {
   const navCollapse = useMemo(() => {
     if (!currentItem.children) return null;
 
-    return currentItem.children
-      .filter((menuItem) => hasAccess(menuItem)) // Filter by role
-      .map((menuItem, index) => {
-        const key = menuItem.id || `${menuItem.type}-${index}`;
+    return currentItem.children.map((menuItem, index) => {
+      const key = menuItem.id || `${menuItem.type}-${index}`;
 
-        switch (menuItem.type) {
-          case 'collapse':
-            return (
-              <NavCollapse
-                key={key}
-                menu={menuItem}
-                setSelectedItems={setSelectedItems}
-                setSelectedLevel={setSelectedLevel}
-                selectedLevel={selectedLevel}
-                selectedItems={selectedItems}
-                level={1}
-                parentId={currentItem.id}
-              />
-            );
-          case 'item':
-            return <NavItem key={key} item={menuItem} level={1} />;
-          default:
-            return (
-              <h6 key={`fix-${index}`} className="align-center text-danger">
-                Fix - Group Collapse or Items
-              </h6>
-            );
-        }
-      });
-  }, [currentItem, selectedItems, selectedLevel, setSelectedItems, setSelectedLevel, hasAccess]);
+      switch (menuItem.type) {
+        case 'collapse':
+          return (
+            <NavCollapse
+              key={key}
+              menu={menuItem}
+              setSelectedItems={setSelectedItems}
+              setSelectedLevel={setSelectedLevel}
+              selectedLevel={selectedLevel}
+              selectedItems={selectedItems}
+              level={1}
+              parentId={currentItem.id}
+            />
+          );
+        case 'item':
+          return <NavItem key={key} item={menuItem} level={1} />;
+        default:
+          return (
+            <h6 key={`fix-${index}`} className="align-center text-danger">
+              Fix - Group Collapse or Items
+            </h6>
+          );
+      }
+    });
+  }, [currentItem, selectedItems, selectedLevel, setSelectedItems, setSelectedLevel]);
 
   // Hide the whole group (heading included) when the user can't see any of its items.
   if (!navCollapse?.length) return null;

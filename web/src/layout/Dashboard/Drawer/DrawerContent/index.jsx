@@ -6,11 +6,12 @@ import ListGroup from 'react-bootstrap/ListGroup';
 // project imports
 import NavItem from './NavItem';
 import NavGroup from './NavGroup';
-import menuItems from 'menu-items';
+import { useMenuItems } from 'hooks/useMenuItems';
 
 // ==============================|| DRAWER CONTENT ||============================== //
 
 export default function Navigation({ selectedItems, setSelectedItems, setSelectTab }) {
+  const menuItems = useMenuItems();
   const [selectedID, setSelectedID] = useState('');
   const [selectedLevel, setSelectedLevel] = useState(0);
 

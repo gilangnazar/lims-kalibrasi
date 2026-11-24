@@ -27,6 +27,7 @@ const toPublic = (menu) => ({
   path: menu.path,
   sort_order: menu.sort_order,
   is_visible: Boolean(menu.is_visible),
+  can_hide: !ALWAYS_VISIBLE.includes(menu.code),
   actions: typeof menu.actions === 'string' ? JSON.parse(menu.actions) : menu.actions
 });
 

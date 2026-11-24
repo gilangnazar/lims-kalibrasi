@@ -4,7 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import ProtectedRoute from 'components/ProtectedRoute';
 import { AuthContext } from 'context/AuthContext';
 
-function renderAt(auth, requiredRoles, permission) {
+function renderAt(auth, props = {}) {
   return render(
     <AuthContext.Provider value={{ loading: false, ...auth }}>
       <MemoryRouter initialEntries={['/users']}>
@@ -14,7 +14,7 @@ function renderAt(auth, requiredRoles, permission) {
           <Route
             path="/users"
             element={
-              <ProtectedRoute requiredRoles={requiredRoles} permission={permission}>
+              <ProtectedRoute {...props}>
                 <div>users page</div>
               </ProtectedRoute>
             }
@@ -27,25 +27,27 @@ function renderAt(auth, requiredRoles, permission) {
 
 describe('ProtectedRoute', () => {
   it('redirects to login when not authenticated', () => {
-    renderAt({ isAuthenticated: false, user: null });
+    renderAt({ isAuthenticated: false, user: null }, { menu: 'users' });
     expect(screen.getByText('login page')).toBeInTheDocument();
   });
 
-  it('redirects home when the user lacks the required role', () => {
-    renderAt({ isAuthenticated: true, user: { role: 'Teknisi' } }, ['Admin']);
+  it('redirects home without view permission on the menu', () => {
+    renderAt({ isAuthenticated: true, user: { permissions: ['customers:view'] } }, { menu: 'users' });
     expect(screen.getByText('home page')).toBeInTheDocument();
   });
 
-  it('renders the page for a user with the required role', () => {
-    renderAt({ isAuthenticated: true, user: { role: 'Admin' } }, ['Admin']);
+  it('renders the page with view permission', () => {
+    renderAt({ isAuthenticated: true, user: { permissions: ['users:view'] } }, { menu: 'users' });
     expect(screen.getByText('users page')).toBeInTheDocument();
   });
 
-  it('uses the permission map when a permission is given', () => {
-    renderAt({ isAuthenticated: true, user: { role: 'Finance' } }, [], 'users.read');
+  it('checks a specific action when given', () => {
+    renderAt({ isAuthenticated: true, user: { permissions: ['users:view'] } }, { menu: 'users', action: 'edit' });
     expect(screen.getByText('home page')).toBeInTheDocument();
+  });
 
-    renderAt({ isAuthenticated: true, user: { role: 'Admin' } }, [], 'users.read');
+  it('only needs a login when no menu is given', () => {
+    renderAt({ isAuthenticated: true, user: { permissions: [] } });
     expect(screen.getByText('users page')).toBeInTheDocument();
   });
 });

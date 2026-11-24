@@ -43,7 +43,10 @@ describe('RBAC — permissions', () => {
     const granted = Object.fromEntries(saved.body.data.menus.map((menu) => [menu.code, menu.granted]));
     expect(granted).toMatchObject({ 'standard-instruments': ['view'], customers: ['view'], methods: [] });
 
-    const assigned = await api().put(`/api/users/${user.id}/roles`).set(bearer(adminToken)).send({ role_ids: [id] });
+    const assigned = await api()
+      .put(`/api/users/${user.id}/roles`)
+      .set(bearer(adminToken))
+      .send({ role_ids: [id] });
     expect(assigned.status).toBe(200);
     expect(assigned.body.data.roles.map((role) => role.name)).toEqual(['Auditor']);
     expect((await api().get('/api/standard-instruments').set(bearer(token))).status).toBe(200);
@@ -67,6 +70,7 @@ describe('RBAC — permissions', () => {
     expect((await api().put(`/api/roles/${id}/permissions`).set(bearer(token)).send({ permissions: {} })).status).toBe(400);
     const grid = await api().get(`/api/roles/${id}/permissions`).set(bearer(token));
     expect(grid.body.data.locked).toBe(true);
+    expect(grid.body.data.groups.map((group) => group.code)).toEqual(['master-data', 'administration']);
     for (const menu of grid.body.data.menus) expect(menu.granted).toEqual(menu.actions);
   });
 });
@@ -84,7 +88,10 @@ describe('RBAC — roles', () => {
     const { token } = await createUser('Admin');
     const created = await api().post('/api/roles').set(bearer(token)).send({ name: 'Sementara' });
     const { user } = await createUser('Teknisi');
-    await api().put(`/api/users/${user.id}/roles`).set(bearer(token)).send({ role_ids: [created.body.data.id] });
+    await api()
+      .put(`/api/users/${user.id}/roles`)
+      .set(bearer(token))
+      .send({ role_ids: [created.body.data.id] });
     expect((await api().delete(`/api/roles/${created.body.data.id}`).set(bearer(token))).status).toBe(400);
   });
 
@@ -98,11 +105,21 @@ describe('RBAC — users and lockout', () => {
   it('keeps the last active Admin', async () => {
     const { user, token } = await createUser('Admin');
     const teknisi = await roleId('Teknisi');
-    expect((await api().put(`/api/users/${user.id}/roles`).set(bearer(token)).send({ role_ids: [teknisi] })).status).toBe(400);
+    expect(
+      (
+        await api()
+          .put(`/api/users/${user.id}/roles`)
+          .set(bearer(token))
+          .send({ role_ids: [teknisi] })
+      ).status
+    ).toBe(400);
     expect((await api().put(`/api/users/${user.id}`).set(bearer(token)).send({ is_active: false })).status).toBe(400);
 
     await createUser('Admin'); // a second admin makes it allowed
-    const res = await api().put(`/api/users/${user.id}/roles`).set(bearer(token)).send({ role_ids: [teknisi] });
+    const res = await api()
+      .put(`/api/users/${user.id}/roles`)
+      .set(bearer(token))
+      .send({ role_ids: [teknisi] });
     expect(res.status).toBe(200);
   });
 

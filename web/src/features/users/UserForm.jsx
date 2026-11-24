@@ -1,9 +1,9 @@
 import { z } from 'zod';
+import { Controller } from 'react-hook-form';
 import Form from 'react-bootstrap/Form';
 
 import ModalForm from 'components/form/ModalForm';
 import { SelectField, TextField } from 'components/form/Fields';
-import { ALL_ROLES, ROLES } from 'config/permissions';
 import { useList } from 'lib/useResource';
 import { toFormValues, useZodForm } from 'lib/useZodForm';
 import { email, requiredText } from 'lib/zodFields';
@@ -18,36 +18,76 @@ export function userSchema(mode) {
           .refine((value) => value === '' || value.length >= 8, 'Minimal 8 karakter')
           .transform((value) => value || undefined); // blank = keep current password
 
-  return z
-    .object({
-      username: z
-        .string()
-        .trim()
-        .min(3, 'Minimal 3 karakter')
-        .max(50)
-        .regex(/^[a-zA-Z0-9._-]+$/, 'Hanya huruf, angka, titik, garis bawah, dan strip'),
-      full_name: requiredText(100),
-      email,
-      role: z.enum(ALL_ROLES, { message: 'Pilih role' }),
-      customer_id: z.number().int().positive().nullable(),
-      is_active: z.boolean(),
-      password
-    })
-    .refine((value) => value.role !== ROLES.CUSTOMER || value.customer_id, { path: ['customer_id'], message: 'Pilih pelanggan' });
+  return z.object({
+    username: z
+      .string()
+      .trim()
+      .min(3, 'Minimal 3 karakter')
+      .max(50)
+      .regex(/^[a-zA-Z0-9._-]+$/, 'Hanya huruf, angka, titik, garis bawah, dan strip'),
+    full_name: requiredText(100),
+    email,
+    role_ids: z.array(z.number().int().positive()).min(1, 'Pilih minimal satu role'),
+    customer_id: z.number().int().positive().nullable(),
+    is_active: z.boolean(),
+    password
+  });
 }
 
-const EMPTY = { username: '', full_name: '', email: '', role: ROLES.TEKNISI, customer_id: null, is_active: true, password: '' };
-const roleOptions = ALL_ROLES.map((role) => ({ value: role, label: role }));
+const EMPTY = { username: '', full_name: '', email: '', role_ids: [], customer_id: null, is_active: true, password: '' };
 const toCustomerId = (value) => (value === '' || value === null || value === undefined ? null : Number(value));
 
+/** Role checkboxes (several roles per user). A customer (portal) role can't be combined with staff roles. */
+function RoleCheckboxes({ field, roles, error }) {
+  const selected = field.value ?? [];
+  const toggle = (id) => field.onChange(selected.includes(id) ? selected.filter((value) => value !== id) : [...selected, id]);
+  return (
+    <Form.Group className="mb-3">
+      <Form.Label>Role</Form.Label>
+      <div className="d-flex flex-wrap gap-3">
+        {roles.map((role) => (
+          <Form.Check
+            key={role.id}
+            type="checkbox"
+            id={`role-${role.id}`}
+            label={role.name}
+            checked={selected.includes(role.id)}
+            onChange={() => toggle(role.id)}
+            isInvalid={Boolean(error)}
+          />
+        ))}
+      </div>
+      {error && <div className="invalid-feedback d-block">{error}</div>}
+    </Form.Group>
+  );
+}
+
 export default function UserForm({ initialData, mode, onSubmit, onCancel }) {
+  const { rows: roles } = useList('roles', { limit: 100, sort: 'name' });
+  const scopedIds = roles.filter((role) => role.is_customer_scope).map((role) => role.id);
+
   const form = useZodForm({
     schema: userSchema(mode),
-    defaultValues: { ...toFormValues(initialData, EMPTY), password: '' },
-    onSubmit: ({ customer_id, ...values }) => onSubmit({ ...values, customer_id: values.role === ROLES.CUSTOMER ? customer_id : null })
+    defaultValues: {
+      ...toFormValues(initialData, EMPTY),
+      role_ids: (initialData?.roles ?? []).map((role) => role.id),
+      password: ''
+    },
+    onSubmit: async ({ customer_id, ...values }) => {
+      const scoped = values.role_ids.some((id) => scopedIds.includes(id));
+      if (scoped && values.role_ids.length > 1) {
+        form.setError('role_ids', { message: 'Role pelanggan tidak dapat digabung dengan role staf' });
+        return;
+      }
+      if (scoped && !customer_id) {
+        form.setError('customer_id', { message: 'Pilih pelanggan' });
+        return;
+      }
+      await onSubmit({ ...values, customer_id: scoped ? customer_id : null });
+    }
   });
 
-  const isCustomer = form.watch('role') === ROLES.CUSTOMER;
+  const isCustomer = (form.watch('role_ids') ?? []).some((id) => scopedIds.includes(id));
   const { rows: customers } = useList('customers', { limit: 100 }, { enabled: isCustomer });
 
   return (
@@ -55,7 +95,11 @@ export default function UserForm({ initialData, mode, onSubmit, onCancel }) {
       <TextField form={form} name="username" label="Username" disabled={mode === 'edit'} autoComplete="off" />
       <TextField form={form} name="full_name" label="Nama Lengkap" />
       <TextField form={form} name="email" label="Email" type="email" />
-      <SelectField form={form} name="role" label="Role" options={roleOptions} />
+      <Controller
+        control={form.control}
+        name="role_ids"
+        render={({ field, fieldState }) => <RoleCheckboxes field={field} roles={roles} error={fieldState.error?.message} />}
+      />
       {isCustomer && (
         <SelectField
           form={form}
