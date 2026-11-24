@@ -50,11 +50,11 @@ $i: 1;
       @if $link-shade-percentage !=0 {
         &:hover,
         &:focus {
-          color: if(
-            color-contrast($value) ==$color-contrast-light,
-            shade-color($value, $link-shade-percentage),
-            tint-color($value, $link-shade-percentage)
-          ) !important; // stylelint-disable-line declaration-no-important
+          @if color-contrast($value) == $color-contrast-light {
+            color: shade-color($value, $link-shade-percentage) !important; // stylelint-disable-line declaration-no-important
+          } @else {
+            color: tint-color($value, $link-shade-percentage) !important; // stylelint-disable-line declaration-no-important
+          }
         }
       }
     }
@@ -70,9 +70,12 @@ $i: 1;
     }
 
     .text-bg-primary {
-      color: color-contrast($pc-primary) if($enable-important-utilities, !important, null);
-      background-color: RGBA($color-rgb, var(--#{$prefix}bg-opacity, 1))
-        if($enable-important-utilities, !important, null);
+      $important: null;
+      @if $enable-important-utilities {
+        $important: !important;
+      }
+      color: color-contrast($pc-primary) $important;
+      background-color: RGBA($color-rgb, var(--#{$prefix}bg-opacity, 1)) $important;
     }
 
     .accordion {
