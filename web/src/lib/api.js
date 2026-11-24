@@ -71,9 +71,19 @@ export const api = {
   blob: async (path) => (await send(path, { raw: true })).blob()
 };
 
-/** Opens a protected file (attachment, PDF) in a new tab. */
+/**
+ * Opens a protected file (attachment, PDF) in a new tab. The tab opens right away (inside the click, so
+ * pop-up blockers allow it) and shows the file once it has downloaded with the login token.
+ */
 export async function openFile(path) {
-  const url = URL.createObjectURL(await api.blob(path));
-  window.open(url, '_blank', 'noopener');
-  setTimeout(() => URL.revokeObjectURL(url), 60000);
+  const tab = window.open('', '_blank');
+  try {
+    const url = URL.createObjectURL(await api.blob(path));
+    if (tab) tab.location.href = url;
+    else window.location.assign(url); // pop-ups fully blocked: open in this tab
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  } catch (err) {
+    tab?.close();
+    throw err;
+  }
 }
